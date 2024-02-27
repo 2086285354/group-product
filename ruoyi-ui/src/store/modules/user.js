@@ -1,4 +1,4 @@
-import { login, logout, getInfo, refreshToken } from '@/api/login'
+import {login, logout, getInfo, refreshToken, phone} from '@/api/login'
 import { getToken, setToken, setExpiresIn, removeToken } from '@/utils/auth'
 
 const user = {
@@ -36,6 +36,23 @@ const user = {
   },
 
   actions: {
+    //手机号登录
+    Phone({ commit }, userInfo){
+      const phonenumber = userInfo.phonenumber.trim()
+      const code = userInfo.code
+      return new Promise((resolve, reject) => {
+        phone(phonenumber, code).then(res => {
+          let data = res.data
+          setToken(data.access_token)
+          commit('SET_TOKEN', data.access_token)
+          setExpiresIn(data.expires_in)
+          commit('SET_EXPIRES_IN', data.expires_in)
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
     // 登录
     Login({ commit }, userInfo) {
       const username = userInfo.username.trim()
@@ -90,7 +107,7 @@ const user = {
         })
       })
     },
-    
+
     // 退出系统
     LogOut({ commit, state }) {
       return new Promise((resolve, reject) => {

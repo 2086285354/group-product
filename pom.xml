@@ -216,6 +216,8 @@
         <module>ruoyi-modules</module>
         <module>ruoyi-api</module>
         <module>ruoyi-common</module>
+        <module>ruoyi-modules/ruoyi-product</module>
+        <module>ruoyi-modules/ruoyi-trak</module>
     </modules>
     <packaging>pom</packaging>
 

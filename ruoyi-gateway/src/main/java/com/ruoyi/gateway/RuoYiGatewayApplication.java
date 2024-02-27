@@ -3,6 +3,7 @@ package com.ruoyi.gateway;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 
 /**
  * 网关启动程序
@@ -10,6 +11,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
  * @author ruoyi
  */
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class })
+@RefreshScope
 public class RuoYiGatewayApplication
 {
     public static void main(String[] args)

@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import com.ruoyi.common.security.annotation.EnableRyFeignClients;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 
 /**
  * 认证授权中心
@@ -12,6 +13,7 @@ import com.ruoyi.common.security.annotation.EnableRyFeignClients;
  */
 @EnableRyFeignClients
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class })
+@RefreshScope
 public class RuoYiAuthApplication
 {
     public static void main(String[] args)
