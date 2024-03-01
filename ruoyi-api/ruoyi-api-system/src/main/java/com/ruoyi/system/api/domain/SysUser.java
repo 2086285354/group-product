@@ -3,6 +3,7 @@ package com.ruoyi.system.api.domain;
 import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.*;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.ruoyi.common.core.annotation.Excel;
@@ -11,16 +12,20 @@ import com.ruoyi.common.core.annotation.Excel.Type;
 import com.ruoyi.common.core.annotation.Excels;
 import com.ruoyi.common.core.web.domain.BaseEntity;
 import com.ruoyi.common.core.xss.Xss;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
 
 /**
  * 用户对象 sys_user
- * 
+ *
  * @author ruoyi
  */
+@Document(indexName = "sys_user")
 public class SysUser extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
-
+    @Id
     /** 用户ID */
     @Excel(name = "用户序号", cellType = ColumnType.NUMERIC, prompt = "用户编号")
     private Long userId;
@@ -31,6 +36,7 @@ public class SysUser extends BaseEntity
 
     /** 用户账号 */
     @Excel(name = "登录名称")
+//    @Field(analyzer = "ik_smart")
     private String userName;
 
     /** 用户昵称 */
@@ -43,6 +49,7 @@ public class SysUser extends BaseEntity
 
     /** 手机号码 */
     @Excel(name = "手机号码")
+//    @Field(analyzer = "standard")
     private String phonenumber;
 
     /** 用户性别 */
@@ -72,8 +79,8 @@ public class SysUser extends BaseEntity
 
     /** 部门对象 */
     @Excels({
-        @Excel(name = "部门名称", targetAttr = "deptName", type = Type.EXPORT),
-        @Excel(name = "部门负责人", targetAttr = "leader", type = Type.EXPORT)
+            @Excel(name = "部门名称", targetAttr = "deptName", type = Type.EXPORT),
+            @Excel(name = "部门负责人", targetAttr = "leader", type = Type.EXPORT)
     })
     private SysDept dept;
 
@@ -89,6 +96,100 @@ public class SysUser extends BaseEntity
     /** 角色ID */
     private Long roleId;
 
+    /** 地区组 */
+    private Integer[] areas;
+
+    public void setAreas(Integer[] areas) {
+        this.areas = areas;
+    }
+
+    public Integer[] getAreas() {
+        return areas;
+    }
+
+    /** 国家 */
+    private Integer countryId;
+
+    private String countryName;
+
+    public void setCountryName(String countryName) {
+        this.countryName = countryName;
+    }
+
+    public void setProvinceName(String provinceName) {
+        this.provinceName = provinceName;
+    }
+
+    public void setCityName(String cityName) {
+        this.cityName = cityName;
+    }
+
+    public void setPlaceName(String placeName) {
+        this.placeName = placeName;
+    }
+
+    public String getCountryName() {
+        return countryName;
+    }
+
+    public String getProvinceName() {
+        return provinceName;
+    }
+
+    public String getCityName() {
+        return cityName;
+    }
+
+    public String getPlaceName() {
+        return placeName;
+    }
+
+    /** 省 */
+    private Integer provinceId;
+
+    private String provinceName;
+
+    /** 市 */
+    private Integer cityId;
+
+    private String cityName;
+
+    public void setCountryId(Integer countryId) {
+        this.countryId = countryId;
+    }
+
+    public void setProvinceId(Integer provinceId) {
+        this.provinceId = provinceId;
+    }
+
+    public void setCityId(Integer cityId) {
+        this.cityId = cityId;
+    }
+
+    public void setPlaceId(Integer placeId) {
+        this.placeId = placeId;
+    }
+
+    public Integer getCountryId() {
+        return countryId;
+    }
+
+    public Integer getProvinceId() {
+        return provinceId;
+    }
+
+    public Integer getCityId() {
+        return cityId;
+    }
+
+    public Integer getPlaceId() {
+        return placeId;
+    }
+
+    /** 区 */
+    private Integer placeId;
+
+    private String placeName;
     public SysUser()
     {
 
@@ -299,25 +400,29 @@ public class SysUser extends BaseEntity
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("userId", getUserId())
-            .append("deptId", getDeptId())
-            .append("userName", getUserName())
-            .append("nickName", getNickName())
-            .append("email", getEmail())
-            .append("phonenumber", getPhonenumber())
-            .append("sex", getSex())
-            .append("avatar", getAvatar())
-            .append("password", getPassword())
-            .append("status", getStatus())
-            .append("delFlag", getDelFlag())
-            .append("loginIp", getLoginIp())
-            .append("loginDate", getLoginDate())
-            .append("createBy", getCreateBy())
-            .append("createTime", getCreateTime())
-            .append("updateBy", getUpdateBy())
-            .append("updateTime", getUpdateTime())
-            .append("remark", getRemark())
-            .append("dept", getDept())
-            .toString();
+                .append("userId", getUserId())
+                .append("deptId", getDeptId())
+                .append("userName", getUserName())
+                .append("nickName", getNickName())
+                .append("email", getEmail())
+                .append("phonenumber", getPhonenumber())
+                .append("sex", getSex())
+                .append("avatar", getAvatar())
+                .append("password", getPassword())
+                .append("status", getStatus())
+                .append("delFlag", getDelFlag())
+                .append("loginIp", getLoginIp())
+                .append("loginDate", getLoginDate())
+                .append("createBy", getCreateBy())
+                .append("createTime", getCreateTime())
+                .append("updateBy", getUpdateBy())
+                .append("updateTime", getUpdateTime())
+                .append("remark", getRemark())
+                .append("dept", getDept())
+                .append("countryId",getCountryId())
+                .append("provinceId", getProvinceId())
+                .append("cityId",getCityId())
+                .append("placeId",getPlaceId())
+                .toString();
     }
 }

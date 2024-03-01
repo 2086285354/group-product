@@ -1,6 +1,8 @@
 package com.ruoyi.auth.common;
 
+import com.zhenzi.sms.ZhenziSmsClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
@@ -13,6 +15,10 @@ public class ZzyConfig {
     private String appSecret;
     @Value("${zzy.config.templateId}")
     private String templateId;
+    @Bean
+    public ZhenziSmsClient getClient() {
+        return new ZhenziSmsClient(apiUrl,appId,appSecret);
+    }
 
     public String getTemplateId() {
         return templateId;

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.mapper.PlanInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.ruoyi.domain.PlanInfo">
+        <id property="planId" column="plan_id" jdbcType="INTEGER"/>
+        <result property="cropInfoId" column="crop_info_id" jdbcType="INTEGER"/>
+        <result property="recordTime" column="record_time" jdbcType="TIMESTAMP"/>
+        <result property="temperature" column="temperature" jdbcType="VARCHAR"/>
+        <result property="arowths" column="arowths" jdbcType="VARCHAR"/>
+        <result property="humidness" column="humidness" jdbcType="VARCHAR"/>
+        <result property="illumination" column="illumination" jdbcType="VARCHAR"/>
+        <result property="pic" column="pic" jdbcType="VARCHAR"/>
+        <result property="remark" column="plan_remark" jdbcType="VARCHAR"/>
+
+        <result property="delFlag" column="del_flag" jdbcType="VARCHAR"/>
+        <result property="createBy" column="create_by" jdbcType="VARCHAR"/>
+        <result property="updateBy" column="update_by" jdbcType="VARCHAR"/>
+
+        <association property="cropInfo" column="crop_info_id" javaType="com.ruoyi.domain.CropInfo">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="cropNum" column="crop_num" jdbcType="BIGINT"/>
+            <result property="baseId" column="base_id" jdbcType="INTEGER"/>
+            <result property="cropName" column="crop_name" jdbcType="VARCHAR"/>
+            <result property="registrationTime" column="registration_time" jdbcType="TIMESTAMP"/>
+            <result property="cycle" column="cycle" jdbcType="VARCHAR"/>
+            <result property="baseCharge" column="base_charge" jdbcType="VARCHAR"/>
+            <result property="basePhone" column="base_phone" jdbcType="VARCHAR"/>
+            <result property="planmethodId" column="planMethod_id" jdbcType="INTEGER"/>
+            <result property="irrigationId" column="irrigation_id" jdbcType="INTEGER"/>
+            <result property="fertId" column="fert_id" jdbcType="INTEGER"/>
+            <result property="remark" column="remark" jdbcType="VARCHAR"/>
+        </association>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        plan_id,crop_info_id,record_time,
+        temperature,arowths,humidness,
+        illumination,pic,remark
+    </sql>
+    <insert id="addPlanInfo">
+        INSERT INTO plan_info
+        SET crop_info_id = #{cropInfoId},
+            record_time = NOW(),
+            temperature = #{temperature},
+            arowths = #{arowths},
+            humidness = #{humidness},
+            illumination = #{illumination},
+            pic = #{pic},
+            remark = #{remark},
+            create_by = #{createBy}
+    </insert>
+    <insert id="saveBach">
+        INSERT INTO
+            plan_info
+                (
+                    crop_info_id,
+                    record_time,
+                    temperature,
+                    arowths,
+                    humidness,
+                    illumination,
+                    pic,
+                    remark,
+                    create_by,
+                    update_by
+                )
+        VALUES
+        <foreach collection="list" item="plan" separator="," >
+            (
+                #{plan.cropInfoId},
+                #{plan.recordTime},
+                #{plan.temperature},
+                #{plan.arowths},
+                #{plan.humidness},
+                #{plan.illumination},
+                #{plan.pic},
+                #{plan.remark},
+                #{plan.createBy},
+                #{plan.updateBy}
+             )
+        </foreach>
+    </insert>
+    <update id="updatePlanCropInfo">
+        UPDATE plan_info
+        SET
+            crop_info_id = #{cropInfoId},
+            temperature = #{temperature},
+            arowths = #{arowths},
+            humidness = #{humidness},
+            illumination = #{illumination},
+            pic = #{pic},
+            remark = #{remark},
+            update_by = #{updateBy}
+        WHERE
+            del_flag = 0
+        ANd
+            plan_id = #{planId}
+    </update>
+    <delete id="deletePlanCropInfoByIds">
+        UPDATE plan_info
+            SET del_flag = 1
+        WHERE
+            del_flag = 0
+        AND
+            plan_id IN (${ids})
+    </delete>
+    <select id="selectPlanInfoList" resultMap="BaseResultMap">
+        SELECT
+            plan_info.plan_id,
+            plan_info.crop_info_id,
+            plan_info.record_time,
+            plan_info.temperature,
+            plan_info.arowths,
+            plan_info.humidness,
+            plan_info.illumination,
+            plan_info.pic,
+            plan_info.remark plan_remark,
+            crop_name
+        FROM
+            plan_info
+                LEFT JOIN crop_info ON plan_info.crop_info_id = crop_info.id
+        where
+            plan_info.del_flag = 0
+        <if test="cropName!=null and cropName!=''">
+            AND instr(crop_name,#{cropName})
+        </if>
+        <if test="params!=null">
+            AND plan_info.record_time >=#{params.beginTime}
+        </if>
+        <if test="params!=null">
+            AND plan_info.record_time &lt;=#{params.endTime}
+        </if>
+    </select>
+    <select id="selectPlanInfoToExcel" resultMap="BaseResultMap">
+        SELECT
+            plan_id,
+            crop_info_id,
+            record_time,
+            temperature,
+            arowths,
+            humidness,
+            illumination,
+            pic,
+            remark plan_remark,
+            create_by,
+            update_by,
+            del_flag
+        FROM
+            plan_info
+        where
+        plan_info.del_flag = 0
+        <if test="cropName!=null and cropName!=''">
+            AND instr(crop_name,#{cropName})
+        </if>
+        <if test="params!=null">
+            AND plan_info.record_time >=#{params.beginTime}
+        </if>
+        <if test="params!=null">
+            AND plan_info.record_time &lt;=#{params.endTime}
+        </if>
+    </select>
+</mapper>

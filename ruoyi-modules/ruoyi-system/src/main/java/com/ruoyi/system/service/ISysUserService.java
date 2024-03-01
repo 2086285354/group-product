@@ -212,4 +212,5 @@ public interface ISysUserService
      */
     public String importUser(List<SysUser> userList, Boolean isUpdateSupport, String operName);
 
+    SysUser selectUserOneById(Long userId);
 }

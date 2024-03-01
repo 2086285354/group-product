@@ -12,7 +12,13 @@ export function phone(phonenumber, code) {
     data: { phonenumber, code }
   })
 }
-
+//获取地区数据
+export function getAreaList(){
+  return request({
+    url: '/areaapi/places/list',
+    method: 'get'
+  })
+}
 // 登录方法
 export function login(username, password, code, uuid) {
   return request({

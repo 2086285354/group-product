@@ -42,39 +42,11 @@ public class TokenController
 
     @Autowired
     private SysLoginService sysLoginService;
-    @Autowired
-    RedisTemplate redisTemplate;
-    @Autowired
-    ZzyConfig zzyConfig;
 
     @GetMapping("getPhoneCode")
     public R<?> getPhoneCode(String phonenumber) throws Exception {
-        ZhenziSmsClient client = new ZhenziSmsClient(zzyConfig.getApiUrl(), zzyConfig.getAppId(), zzyConfig.getAppSecret());
-
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("number", phonenumber);
-        params.put("templateId", zzyConfig.getTemplateId());
-        String[] templateParams = new String[2];
-
-        RandomGenerator randomGenerator = new RandomGenerator("0123456789", 4);
-        LineCaptcha lineCaptcha = CaptchaUtil.createLineCaptcha(200, 100);
-        lineCaptcha.setGenerator(randomGenerator);
-
-        String code = lineCaptcha.getCode();
-
-        System.err.println("验证码："+code);
-
-        redisTemplate.opsForValue().set("zzy:"+phonenumber,code,5, TimeUnit.MINUTES);
-
-        templateParams[0] = code;
-        templateParams[1] = "5分钟";
-        params.put("templateParams", templateParams);
-        String result = client.send(params);
-        JSONObject jsonObject = JSON.parseObject(result);
-        String reCode = jsonObject.get("code") + "";
-        if (!reCode.equals("0")){
-            throw new ServiceException("验证码发送失败，请检查手机号码是否正确");
-        }
+        //发送短信验证码
+        sysLoginService.sendCodeByZzy(phonenumber);
         return R.ok();
     }
     @PostMapping("phone")
@@ -82,6 +54,7 @@ public class TokenController
         // 用户登录
         LoginUser userInfo = sysLoginService.phoneLogin(form.getPhonenumber(), form.getCode());
         // 获取登录token
+
         return R.ok(tokenService.createToken(userInfo));
     }
 
@@ -123,8 +96,7 @@ public class TokenController
     }
 
     @PostMapping("register")
-    public R<?> register(@RequestBody RegisterBody registerBody)
-    {
+    public R<?> register(@RequestBody RegisterBody registerBody) {
         // 用户注册
         sysLoginService.register(registerBody.getUsername(), registerBody.getPassword());
         return R.ok();

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.mapper.BaseInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.ruoyi.domain.BaseInfo">
+            <id property="baseId" column="base_id" jdbcType="INTEGER"/>
+            <result property="baseNum" column="base_num" jdbcType="BIGINT"/>
+            <result property="provinceId" column="province_id" jdbcType="INTEGER"/>
+            <result property="cityId" column="city_id" jdbcType="INTEGER"/>
+            <result property="areaId" column="area_id" jdbcType="INTEGER"/>
+            <result property="baseName" column="base_name" jdbcType="VARCHAR"/>
+            <result property="cooperatorId" column="cooperator_id" jdbcType="INTEGER"/>
+            <result property="charge" column="charge" jdbcType="VARCHAR"/>
+            <result property="phone" column="phone" jdbcType="VARCHAR"/>
+            <result property="area" column="area" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="cropName" column="crop_name" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="CHAR"/>
+            <result property="level" column="level" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        base_id,base_num,province_id,
+        city_id,area_id,base_name,
+        cooperator_id,charge,phone,
+        area,create_time,crop_name,
+        status,level
+    </sql>
+</mapper>

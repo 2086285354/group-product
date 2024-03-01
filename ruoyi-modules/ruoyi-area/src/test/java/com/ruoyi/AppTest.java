@@ -5,7 +5,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Unit test for simple TrakApp.
+ * Unit test for simple AreaApp.
  */
 public class AppTest 
     extends TestCase

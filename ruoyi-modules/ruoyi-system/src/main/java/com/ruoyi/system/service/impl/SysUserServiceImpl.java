@@ -553,4 +553,9 @@ public class SysUserServiceImpl implements ISysUserService
         return successMsg.toString();
     }
 
+    @Override
+    public SysUser selectUserOneById(Long userId) {
+        return userMapper.selectUserOneById(userId);
+    }
+
 }
