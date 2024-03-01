@@ -113,6 +113,17 @@ public class SysUserServiceImpl implements ISysUserService
     }
 
     /**
+     * 通过手机号查询用户
+     *
+     * @param phonenumber 手机号
+     * @return 用户对象信息
+     */
+    @Override
+    public SysUser selectUserByPhone(String phonenumber) {
+        return userMapper.selectUserByPhone(phonenumber);
+    }
+
+    /**
      * 通过用户ID查询用户
      * 
      * @param userId 用户ID
@@ -540,6 +551,11 @@ public class SysUserServiceImpl implements ISysUserService
             successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
         }
         return successMsg.toString();
+    }
+
+    @Override
+    public SysUser selectUserOneById(Long userId) {
+        return userMapper.selectUserOneById(userId);
     }
 
 }

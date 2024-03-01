@@ -77,4 +77,11 @@ public class UserConstants
     public static final int PASSWORD_MIN_LENGTH = 5;
 
     public static final int PASSWORD_MAX_LENGTH = 20;
+
+    /**
+     * 手机号长度限制
+     */
+    public static final int PHONENUMBER_MIN_LENGTH= 11;
+
+    public static final int PHONENUMBER_MAX_LENGTH = 11;
 }

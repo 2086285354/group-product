@@ -1,11 +1,19 @@
 package com.ruoyi.auth.controller;
 
 import javax.servlet.http.HttpServletRequest;
+
+import cn.hutool.captcha.CaptchaUtil;
+import cn.hutool.captcha.LineCaptcha;
+import cn.hutool.captcha.generator.RandomGenerator;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.ruoyi.auth.common.ZzyConfig;
+import com.ruoyi.common.core.exception.ServiceException;
+import com.zhenzi.sms.ZhenziSmsClient;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.web.bind.annotation.*;
 import com.ruoyi.auth.form.LoginBody;
 import com.ruoyi.auth.form.RegisterBody;
 import com.ruoyi.auth.service.SysLoginService;
@@ -16,6 +24,10 @@ import com.ruoyi.common.security.auth.AuthUtil;
 import com.ruoyi.common.security.service.TokenService;
 import com.ruoyi.common.security.utils.SecurityUtils;
 import com.ruoyi.system.api.model.LoginUser;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * token 控制
@@ -30,6 +42,21 @@ public class TokenController
 
     @Autowired
     private SysLoginService sysLoginService;
+
+    @GetMapping("getPhoneCode")
+    public R<?> getPhoneCode(String phonenumber) throws Exception {
+        //发送短信验证码
+        sysLoginService.sendCodeByZzy(phonenumber);
+        return R.ok();
+    }
+    @PostMapping("phone")
+    public R<?> phone(@RequestBody LoginBody form) {
+        // 用户登录
+        LoginUser userInfo = sysLoginService.phoneLogin(form.getPhonenumber(), form.getCode());
+        // 获取登录token
+
+        return R.ok(tokenService.createToken(userInfo));
+    }
 
     @PostMapping("login")
     public R<?> login(@RequestBody LoginBody form)
@@ -69,8 +96,7 @@ public class TokenController
     }
 
     @PostMapping("register")
-    public R<?> register(@RequestBody RegisterBody registerBody)
-    {
+    public R<?> register(@RequestBody RegisterBody registerBody) {
         // 用户注册
         sysLoginService.register(registerBody.getUsername(), registerBody.getPassword());
         return R.ok();

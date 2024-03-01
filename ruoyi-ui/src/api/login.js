@@ -1,5 +1,24 @@
 import request from '@/utils/request'
 
+// 手机号登录方法
+export function phone(phonenumber, code) {
+  return request({
+    url: '/auth/phone',
+    headers: {
+      isToken: false,
+      repeatSubmit: false
+    },
+    method: 'post',
+    data: { phonenumber, code }
+  })
+}
+//获取地区数据
+export function getAreaList(){
+  return request({
+    url: '/areaapi/places/list',
+    method: 'get'
+  })
+}
 // 登录方法
 export function login(username, password, code, uuid) {
   return request({
@@ -48,7 +67,14 @@ export function logout() {
     method: 'delete'
   })
 }
-
+//手机验证码
+export function getPhoneCode(data){
+  const phonenumber = data.phonenumber
+  return request({
+    url: '/auth/getPhoneCode?phonenumber='+phonenumber,
+    method: 'get'
+  })
+}
 // 获取验证码
 export function getCodeImg() {
   return request({

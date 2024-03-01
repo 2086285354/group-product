@@ -17,6 +17,32 @@ public class LoginBody
      */
     private String password;
 
+    /**
+     * 手机号
+     */
+    private String phonenumber;
+
+    /**
+     * 验证码
+     */
+    private String code;
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getPhonenumber() {
+        return phonenumber;
+    }
+
+    public void setPhonenumber(String phonenumber) {
+        this.phonenumber = phonenumber;
+    }
+
     public String getUsername()
     {
         return username;

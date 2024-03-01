@@ -1,5 +1,9 @@
 <template>
   <div class="app-container">
+    <el-tabs v-model="activeName" @tab-click="handleClick">
+      <el-tab-pane label="用户管理" name="first"></el-tab-pane>
+      <el-tab-pane label="账号恢复" name="second"></el-tab-pane>
+    </el-tabs>
     <el-row :gutter="20">
       <!--部门数据-->
       <el-col :span="4" :xs="24">
@@ -139,18 +143,46 @@
         <el-table v-loading="loading" :data="userList" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="50" align="center" />
           <el-table-column label="用户编号" align="center" key="userId" prop="userId" v-if="columns[0].visible" />
-          <el-table-column label="用户名称" align="center" key="userName" prop="userName" v-if="columns[1].visible" :show-overflow-tooltip="true" />
+          <el-table-column label="用户名称" align="center" v-if="columns[1].visible" :show-overflow-tooltip="true">
+            <template v-slot="scope">
+              <div v-html="scope.row.userName"></div>
+            </template>
+          </el-table-column>
           <el-table-column label="用户昵称" align="center" key="nickName" prop="nickName" v-if="columns[2].visible" :show-overflow-tooltip="true" />
+          <el-table-column label="地区" align="center" v-if="columns[7].visible" :show-overflow-tooltip="true">
+            <template v-slot="scope">
+              <span>
+                <span v-if="scope.row.countryName!=null">
+                  {{scope.row.countryName}}
+                </span>
+                <span v-if="scope.row.provinceName!=null">
+                  {{"/"+scope.row.provinceName}}
+                </span>
+                <span v-if="scope.row.cityName!=null">
+                  {{"/"+scope.row.cityName}}
+                </span>
+                <span v-if="scope.row.placeName!=null">
+                  {{"/"+scope.row.placeName}}
+                </span>
+              </span>
+            </template>
+          </el-table-column>
           <el-table-column label="部门" align="center" key="deptName" prop="dept.deptName" v-if="columns[3].visible" :show-overflow-tooltip="true" />
-          <el-table-column label="手机号码" align="center" key="phonenumber" prop="phonenumber" v-if="columns[4].visible" width="120" />
+          <el-table-column label="手机号码" align="center" v-if="columns[4].visible" width="120">
+            <template v-slot="scope">
+              <div v-html="scope.row.phonenumber"></div>
+            </template>
+          </el-table-column>
           <el-table-column label="状态" align="center" key="status" v-if="columns[5].visible">
             <template slot-scope="scope">
               <el-switch
+                v-if="queryParams.delFlag=='0'"
                 v-model="scope.row.status"
                 active-value="0"
                 inactive-value="1"
                 @change="handleStatusChange(scope.row)"
               ></el-switch>
+              <el-tag type="danger" v-else>已删除</el-tag>
             </template>
           </el-table-column>
           <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[6].visible" width="160">
@@ -165,29 +197,38 @@
             class-name="small-padding fixed-width"
           >
             <template slot-scope="scope" v-if="scope.row.userId !== 1">
-              <el-button
-                size="mini"
-                type="text"
-                icon="el-icon-edit"
-                @click="handleUpdate(scope.row)"
-                v-hasPermi="['system:user:edit']"
-              >修改</el-button>
-              <el-button
-                size="mini"
-                type="text"
-                icon="el-icon-delete"
-                @click="handleDelete(scope.row)"
-                v-hasPermi="['system:user:remove']"
-              >删除</el-button>
-              <el-dropdown size="mini" @command="(command) => handleCommand(command, scope.row)" v-hasPermi="['system:user:resetPwd', 'system:user:edit']">
+              <span v-if="queryParams.delFlag=='2'">
+                <el-button
+                  size="mini"
+                  type="text"
+                  icon="el-icon-edit"
+                >恢复</el-button>
+              </span>
+              <span v-else>
+                <el-button
+                  size="mini"
+                  type="text"
+                  icon="el-icon-edit"
+                  @click="handleUpdate(scope.row)"
+                  v-hasPermi="['system:user:edit']"
+                >修改</el-button>
+                <el-button
+                  size="mini"
+                  type="text"
+                  icon="el-icon-delete"
+                  @click="handleDelete(scope.row)"
+                  v-hasPermi="['system:user:remove']"
+                >删除</el-button>
+                <el-dropdown size="mini" @command="(command) => handleCommand(command, scope.row)" v-hasPermi="['system:user:resetPwd', 'system:user:edit']">
                 <el-button size="mini" type="text" icon="el-icon-d-arrow-right">更多</el-button>
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item command="handleResetPwd" icon="el-icon-key"
-                    v-hasPermi="['system:user:resetPwd']">重置密码</el-dropdown-item>
+                                    v-hasPermi="['system:user:resetPwd']">重置密码</el-dropdown-item>
                   <el-dropdown-item command="handleAuthRole" icon="el-icon-circle-check"
-                    v-hasPermi="['system:user:edit']">分配角色</el-dropdown-item>
+                                    v-hasPermi="['system:user:edit']">分配角色</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
+              </span>
             </template>
           </el-table-column>
         </el-table>
@@ -296,6 +337,18 @@
         </el-row>
         <el-row>
           <el-col :span="24">
+            <el-form-item label="地区" prop="areas">
+              <el-cascader
+                v-model="form.areas"
+                :options="areaData"
+                :props="optionProps"
+                clearable="true"
+                @change="handleChange"></el-cascader>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
             <el-form-item label="备注">
               <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"></el-input>
             </el-form-item>
@@ -341,10 +394,21 @@
 </template>
 
 <script>
-import { listUser, getUser, delUser, addUser, updateUser, resetUserPwd, changeUserStatus, deptTreeSelect } from "@/api/system/user";
+import {
+  listUser,
+  getUser,
+  delUser,
+  addUser,
+  updateUser,
+  resetUserPwd,
+  changeUserStatus,
+  deptTreeSelect,
+  getEs
+} from "@/api/system/user";
 import { getToken } from "@/utils/auth";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+import {getAreaList} from "@/api/login";
 
 export default {
   name: "User",
@@ -352,6 +416,16 @@ export default {
   components: { Treeselect },
   data() {
     return {
+      activeName: 'first',
+      optionProps: {
+        expandTrigger: 'hover',
+        value: 'id',
+        label: 'name'
+      },
+      //地区数据
+      areaData:[],
+      //地区
+      areas:[],
       // 遮罩层
       loading: true,
       // 选中数组
@@ -407,6 +481,7 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
+        delFlag: '0',
         userName: undefined,
         phonenumber: undefined,
         status: undefined,
@@ -420,7 +495,8 @@ export default {
         { key: 3, label: `部门`, visible: true },
         { key: 4, label: `手机号码`, visible: true },
         { key: 5, label: `状态`, visible: true },
-        { key: 6, label: `创建时间`, visible: true }
+        { key: 6, label: `创建时间`, visible: true },
+        { key: 7, label: `地区`, visible: true }
       ],
       // 表单校验
       rules: {
@@ -430,6 +506,9 @@ export default {
         ],
         nickName: [
           { required: true, message: "用户昵称不能为空", trigger: "blur" }
+        ],
+        areas: [
+          { required: true, trigger: "change", message: "请选择地区" }
         ],
         password: [
           { required: true, message: "用户密码不能为空", trigger: "blur" },
@@ -460,21 +539,44 @@ export default {
   },
   created() {
     this.getList();
+    this.getAreas();
     this.getDeptTree();
     this.getConfigKey("sys.user.initPassword").then(response => {
       this.initPassword = response.msg;
     });
   },
   methods: {
+    handleClick() {
+      console.log(this.activeName)
+      this.queryParams.delFlag = this.activeName=='first'?0:2
+      this.getList()
+    },
+    handleChange(value) {
+      this.areas = value
+    },
+    getAreas(){
+      getAreaList().then(r=>{
+        if (r.code == 200){
+          this.areaData = r.data
+        }
+      })
+    },
     /** 查询用户列表 */
     getList() {
       this.loading = true;
-      listUser(this.addDateRange(this.queryParams, this.dateRange)).then(response => {
-          this.userList = response.rows;
-          this.total = response.total;
-          this.loading = false;
+      // listUser(this.addDateRange(this.queryParams, this.dateRange)).then(response => {
+      //     this.userList = response.rows;
+      //     this.total = response.total;
+      //     this.loading = false;
+      //   }
+      // );
+      getEs(this.addDateRange(this.queryParams, this.dateRange)).then(r=>{
+        if (r.code == 200){
+          this.userList=r.data
+          this.total = r.total
+          this.loading = false
         }
-      );
+      })
     },
     /** 查询部门下拉树结构 */
     getDeptTree() {
@@ -522,7 +624,8 @@ export default {
         status: "0",
         remark: undefined,
         postIds: [],
-        roleIds: []
+        roleIds: [],
+        areas:[]
       };
       this.resetForm("form");
     },
@@ -579,6 +682,20 @@ export default {
         this.roleOptions = response.roles;
         this.$set(this.form, "postIds", response.postIds);
         this.$set(this.form, "roleIds", response.roleIds);
+        this.form.areas=[];
+        if (this.form.countryId!=null){
+          this.form.areas[0]=this.form.countryId.toString()
+        }
+        if (this.form.provinceId!=null){
+          this.form.areas[1]=this.form.provinceId.toString()
+        }
+        if (this.form.cityId!=null){
+          this.form.areas[2]=this.form.cityId.toString()
+        }
+        if (this.form.placeId!=null){
+          this.form.areas[3]=this.form.placeId.toString()
+        }
+        console.log(this.form.areas)
         this.open = true;
         this.title = "修改用户";
         this.form.password = "";
@@ -593,10 +710,10 @@ export default {
         inputPattern: /^.{5,20}$/,
         inputErrorMessage: "用户密码长度必须介于 5 和 20 之间"
       }).then(({ value }) => {
-          resetUserPwd(row.userId, value).then(response => {
-            this.$modal.msgSuccess("修改成功，新密码是：" + value);
-          });
-        }).catch(() => {});
+        resetUserPwd(row.userId, value).then(response => {
+          this.$modal.msgSuccess("修改成功，新密码是：" + value);
+        });
+      }).catch(() => {});
     },
     /** 分配角色操作 */
     handleAuthRole: function(row) {
@@ -608,6 +725,11 @@ export default {
       this.$refs["form"].validate(valid => {
         if (valid) {
           if (this.form.userId != undefined) {
+            this.form.countryId = this.areas[0] == undefined ? null : this.form.areas[0]
+            this.form.provinceId = this.areas[1] == undefined ? null : this.form.areas[1]
+            this.form.cityId = this.areas[2]== undefined ? null : this.form.areas[2]
+            this.form.placeId = this.areas[3]== undefined ? null : this.form.areas[3]
+            console.log(this.form.areas[3])
             updateUser(this.form).then(response => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;

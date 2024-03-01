@@ -1,21 +1,29 @@
 package com.ruoyi.system.controller;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
+
+import com.ruoyi.common.core.utils.DateUtils;
+import com.ruoyi.system.common.QueryPage;
+import com.ruoyi.system.repository.SysUserRepository;
 import org.apache.commons.lang3.ArrayUtils;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.ruoyi.common.core.domain.R;
 import com.ruoyi.common.core.utils.StringUtils;
@@ -66,6 +74,95 @@ public class SysUserController extends BaseController
     @Autowired
     private ISysConfigService configService;
 
+    @Autowired
+    ElasticsearchRestTemplate elasticsearchRestTemplate;
+
+    @Autowired
+    SysUserRepository sysUserRepository;
+
+    /**
+     * 获取用户列表
+     */
+    @PostConstruct
+    public void init() {
+        List<SysUser> sysUsers = userService.selectUserList(new SysUser());
+        sysUserRepository.saveAll(sysUsers);
+    }
+
+    @GetMapping("selectList")
+    public Map<String,Object> select(SysUser user, QueryPage page){
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        boolQueryBuilder.must(QueryBuilders.termQuery("delFlag",user.getDelFlag()));
+
+        if (StringUtils.isNotEmpty(page.getUserName())){
+            boolQueryBuilder.must(QueryBuilders.matchQuery("userName",page.getUserName()));
+        }
+
+        if (StringUtils.isNotEmpty(page.getPhonenumber())){
+            boolQueryBuilder.must(QueryBuilders.wildcardQuery("phonenumber","*"+page.getPhonenumber().toLowerCase(Locale.ROOT).trim()+"*"));
+        }
+
+        if (StringUtils.isNotEmpty(page.getStatus())){
+            boolQueryBuilder.must(QueryBuilders.termQuery("status",page.getStatus()));
+        }
+
+        RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery("createTime");
+        if (user.getParams().get("beginTime")!=null){
+            Date beginTime = DateUtils.parseDate(user.getParams().get("beginTime").toString());
+            boolQueryBuilder.must(rangeQueryBuilder.gte(beginTime.getTime()));
+        }
+
+        if (user.getParams().get("endTime")!=null){
+            Date endTime = DateUtils.parseDate(user.getParams().get("endTime").toString());
+            boolQueryBuilder.must(rangeQueryBuilder.lte(endTime.getTime()));
+        }
+
+        PageRequest pageRequest = PageRequest.of(page.getPageNum() - 1, page.getPageSize(), Sort.Direction.ASC, "userId");
+
+        HighlightBuilder.Field[] highlightFields = new HighlightBuilder.Field[2];
+        highlightFields[0] = new HighlightBuilder.Field("userName")
+                .preTags("<font color = 'red'>")
+                .postTags("</font>");
+
+        highlightFields[1] = new HighlightBuilder.Field("phonenumber")
+                .preTags("<font color = 'red'>")
+                .postTags("</font>");
+
+        NativeSearchQuery query = new NativeSearchQueryBuilder()
+                .withPageable(pageRequest)
+                .withHighlightFields(highlightFields)
+                .withQuery(boolQueryBuilder)
+                .build();
+
+        SearchHits<SysUser> search = elasticsearchRestTemplate.search(query, SysUser.class);
+        List<SearchHit<SysUser>> searchHits = search.getSearchHits();
+        List<SysUser> list = new ArrayList<>();
+
+        for (SearchHit<SysUser> searchHit : searchHits) {
+            SysUser content = searchHit.getContent();
+            if (highlightFields!=null){
+                Map<String, List<String>> highlightFields1 = searchHit.getHighlightFields();
+                if (highlightFields1!=null){
+                    List<String> userName = highlightFields1.get("userName");
+                    if (userName != null){
+                        content.setUserName(userName.get(0).toString());
+                    }
+                    List<String> phonenumber = highlightFields1.get("phonenumber");
+                    if (phonenumber != null){
+                        content.setPhonenumber(phonenumber.get(0).toString());
+                    }
+                }
+            }
+            list.add(content);
+        }
+
+        Map<String,Object> map = new HashMap<>();
+        map.put("code",200);
+        map.put("msg","操作成功");
+        map.put("data",list);
+        map.put("total",search.getTotalHits());
+        return map;
+    }
     /**
      * 获取用户列表
      */
@@ -105,6 +202,28 @@ public class SysUserController extends BaseController
     {
         ExcelUtil<SysUser> util = new ExcelUtil<SysUser>(SysUser.class);
         util.importTemplateExcel(response, "用户数据");
+    }
+
+    /**
+     * 获取当前用户信息
+     */
+    @InnerAuth
+    @PostMapping("/getUserByPhone")
+    public R<LoginUser> getUserByPhone(@RequestParam("phonenumber") String phonenumber) {
+        SysUser sysUser = userService.selectUserByPhone(phonenumber);
+        if (StringUtils.isNull(sysUser))
+        {
+            return R.fail("用户名或密码错误");
+        }
+        // 角色集合
+        Set<String> roles = permissionService.getRolePermission(sysUser);
+        // 权限集合
+        Set<String> permissions = permissionService.getMenuPermission(sysUser);
+        LoginUser sysUserVo = new LoginUser();
+        sysUserVo.setSysUser(sysUser);
+        sysUserVo.setRoles(roles);
+        sysUserVo.setPermissions(permissions);
+        return R.ok(sysUserVo);
     }
 
     /**
@@ -213,7 +332,20 @@ public class SysUserController extends BaseController
         }
         user.setCreateBy(SecurityUtils.getUsername());
         user.setPassword(SecurityUtils.encryptPassword(user.getPassword()));
-        return toAjax(userService.insertUser(user));
+
+        int length = user.getAreas().length;//3
+
+        user.setCountryId(1>length ? 0 : user.getAreas()[0]);
+        user.setProvinceId(2>length ? 0 : user.getAreas()[1]);
+        user.setCityId(3>length ? 0 : user.getAreas()[2]);
+        user.setPlaceId(4>length ? 0 : user.getAreas()[3]);
+
+        int i = userService.insertUser(user);
+
+        SysUser sysUser = userService.selectUserOneById(user.getUserId());
+        sysUserRepository.save(sysUser);
+
+        return toAjax(i);
     }
 
     /**
@@ -239,7 +371,11 @@ public class SysUserController extends BaseController
             return error("修改用户'" + user.getUserName() + "'失败，邮箱账号已存在");
         }
         user.setUpdateBy(SecurityUtils.getUsername());
-        return toAjax(userService.updateUser(user));
+        int i = userService.updateUser(user);
+
+        SysUser userDB =userService.selectUserOneById(user.getUserId());
+        sysUserRepository.save(userDB);
+        return toAjax(i);
     }
 
     /**
@@ -254,7 +390,13 @@ public class SysUserController extends BaseController
         {
             return error("当前用户不能删除");
         }
-        return toAjax(userService.deleteUserByIds(userIds));
+        int i = userService.deleteUserByIds(userIds);
+
+        for (Long userId : userIds) {
+            SysUser userDB =userService.selectUserOneById(userId);
+            sysUserRepository.save(userDB);
+        }
+        return toAjax(i);
     }
 
     /**
@@ -283,7 +425,11 @@ public class SysUserController extends BaseController
         userService.checkUserAllowed(user);
         userService.checkUserDataScope(user.getUserId());
         user.setUpdateBy(SecurityUtils.getUsername());
-        return toAjax(userService.updateUserStatus(user));
+
+        int i = userService.updateUserStatus(user);
+        SysUser sysUser = userService.selectUserOneById(user.getUserId());
+        sysUserRepository.save(sysUser);
+        return toAjax(i);
     }
 
     /**

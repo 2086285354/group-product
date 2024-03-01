@@ -9,7 +9,14 @@ export function listUser(query) {
     params: query
   })
 }
-
+//测试es
+export function getEs(query){
+  return request({
+    url: '/system/user/selectList',
+    method: 'get',
+    params: query
+  })
+}
 // 查询用户详细
 export function getUser(userId) {
   return request({
