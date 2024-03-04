@@ -5,7 +5,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Unit test for simple RuoyiAreaApplication.
+ * Unit test for simple RuoyiActivityApplication.
  */
 public class AppTest 
     extends TestCase

@@ -89,6 +89,7 @@
             <el-button
               type="primary"
               plain
+              v-if="activeName=='first'"
               icon="el-icon-plus"
               size="mini"
               @click="handleAdd"
@@ -99,6 +100,7 @@
             <el-button
               type="success"
               plain
+              v-if="activeName=='first'"
               icon="el-icon-edit"
               size="mini"
               :disabled="single"
@@ -110,6 +112,7 @@
             <el-button
               type="danger"
               plain
+              v-if="activeName=='first'"
               icon="el-icon-delete"
               size="mini"
               :disabled="multiple"
@@ -121,6 +124,7 @@
             <el-button
               type="info"
               plain
+              v-if="activeName=='first'"
               icon="el-icon-upload2"
               size="mini"
               @click="handleImport"
@@ -131,17 +135,28 @@
             <el-button
               type="warning"
               plain
+              v-if="activeName=='first'"
               icon="el-icon-download"
               size="mini"
               @click="handleExport"
               v-hasPermi="['system:user:export']"
             >导出</el-button>
           </el-col>
+          <el-col :span="1.5">
+            <el-button
+              type="primary"
+              plain
+              v-if="activeName=='second'"
+              icon="el-icon-download"
+              size="mini"
+              @click="openRecoverHistory"
+            >查看申请记录</el-button>
+          </el-col>
           <right-toolbar :showSearch.sync="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
         </el-row>
 
         <el-table v-loading="loading" :data="userList" @selection-change="handleSelectionChange">
-          <el-table-column type="selection" width="50" align="center" />
+          <el-table-column type="selection" width="50" align="center" v-if="activeName=='first'"/>
           <el-table-column label="用户编号" align="center" key="userId" prop="userId" v-if="columns[0].visible" />
           <el-table-column label="用户名称" align="center" v-if="columns[1].visible" :show-overflow-tooltip="true">
             <template v-slot="scope">
@@ -202,6 +217,7 @@
                   size="mini"
                   type="text"
                   icon="el-icon-edit"
+                  @click="openRecover(scope.row)"
                 >恢复</el-button>
               </span>
               <span v-else>
@@ -390,6 +406,43 @@
         <el-button @click="upload.open = false">取 消</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog
+      title="账号恢复申请"
+      :visible.sync="dialogVisible"
+      width="30%">
+      <el-input
+        type="textarea"
+        :rows="2"
+        placeholder="申请理由"
+        v-model="recoverForm.reason">
+      </el-input>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="submitRecover">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog title="恢复记录" :visible.sync="recoverHistory">
+      <el-table :data="recoverHistoryData" style="width: 6000px;">
+        <el-table-column property="recoverNo" label="申请编号"></el-table-column>
+        <el-table-column property="username" label="申请账号"></el-table-column>
+        <el-table-column property="user" label="申请人"></el-table-column>
+        <el-table-column property="createTime" label="申请时间"></el-table-column>
+        <el-table-column property="reason" label="申请理由"></el-table-column>
+        <el-table-column label="审批状态">
+          <template v-slot="scope">
+            <el-tag v-if="scope.row.status==1">通过</el-tag>
+            <el-tag type="danger" v-else-if="scope.row.status==2">拒绝</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column property="result" label="审批信息"></el-table-column>
+        <el-table-column property="completeTime" label="结束时间"></el-table-column>
+      </el-table>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="recoverHistory = false">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -403,12 +456,13 @@ import {
   resetUserPwd,
   changeUserStatus,
   deptTreeSelect,
-  getEs
+  getEs, addRecover
 } from "@/api/system/user";
 import { getToken } from "@/utils/auth";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 import {getAreaList} from "@/api/login";
+import {getRecoverHistoryList} from "@/api/system/act";
 
 export default {
   name: "User",
@@ -416,6 +470,10 @@ export default {
   components: { Treeselect },
   data() {
     return {
+      recoverHistoryData:[],
+      recoverHistory:false,
+      dialogVisible:false,
+      recoverForm:{},
       activeName: 'first',
       optionProps: {
         expandTrigger: 'hover',
@@ -546,6 +604,31 @@ export default {
     });
   },
   methods: {
+    openRecoverHistory(){
+      this.getRecoverHistory();
+      this.recoverHistory = true;
+    },
+    getRecoverHistory(){
+      getRecoverHistoryList().then(r=>{
+        this.recoverHistoryData = r.data;
+      })
+    },
+    openRecover(obj){
+      this.recoverForm.username = obj.userName;
+      this.dialogVisible = true;
+    },
+    submitRecover(){
+      addRecover(this.recoverForm).then(r=>{
+        if (r.code==200){
+          this.dialogVisible = false;
+          this.$message.success("申请成功");
+          this.recoverForm = {};
+        }
+      }).catch(e=>{
+        this.dialogVisible = false;
+        this.recoverForm = {};
+      })
+    },
     handleClick() {
       console.log(this.activeName)
       this.queryParams.delFlag = this.activeName=='first'?0:2

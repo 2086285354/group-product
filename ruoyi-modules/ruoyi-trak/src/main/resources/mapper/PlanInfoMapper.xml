@@ -6,7 +6,7 @@
 
     <resultMap id="BaseResultMap" type="com.ruoyi.domain.PlanInfo">
         <id property="planId" column="plan_id" jdbcType="INTEGER"/>
-        <result property="cropInfoId" column="crop_info_id" jdbcType="INTEGER"/>
+        <result property="cropNo" column="crop_no" jdbcType="INTEGER"/>
         <result property="recordTime" column="record_time" jdbcType="TIMESTAMP"/>
         <result property="temperature" column="temperature" jdbcType="VARCHAR"/>
         <result property="arowths" column="arowths" jdbcType="VARCHAR"/>
@@ -20,8 +20,7 @@
         <result property="updateBy" column="update_by" jdbcType="VARCHAR"/>
 
         <association property="cropInfo" column="crop_info_id" javaType="com.ruoyi.domain.CropInfo">
-            <id property="id" column="id" jdbcType="INTEGER"/>
-            <result property="cropNum" column="crop_num" jdbcType="BIGINT"/>
+            <result property="cropNo" column="crop_no" jdbcType="BIGINT"/>
             <result property="baseId" column="base_id" jdbcType="INTEGER"/>
             <result property="cropName" column="crop_name" jdbcType="VARCHAR"/>
             <result property="registrationTime" column="registration_time" jdbcType="TIMESTAMP"/>
@@ -42,7 +41,7 @@
     </sql>
     <insert id="addPlanInfo">
         INSERT INTO plan_info
-        SET crop_info_id = #{cropInfoId},
+        SET crop_no = #{cropNo},
             record_time = NOW(),
             temperature = #{temperature},
             arowths = #{arowths},
@@ -56,7 +55,7 @@
         INSERT INTO
             plan_info
                 (
-                    crop_info_id,
+                    crop_no,
                     record_time,
                     temperature,
                     arowths,
@@ -70,7 +69,7 @@
         VALUES
         <foreach collection="list" item="plan" separator="," >
             (
-                #{plan.cropInfoId},
+                #{plan.cropNo},
                 #{plan.recordTime},
                 #{plan.temperature},
                 #{plan.arowths},
@@ -86,7 +85,7 @@
     <update id="updatePlanCropInfo">
         UPDATE plan_info
         SET
-            crop_info_id = #{cropInfoId},
+            crop_no = #{cropNo},
             temperature = #{temperature},
             arowths = #{arowths},
             humidness = #{humidness},
@@ -110,7 +109,7 @@
     <select id="selectPlanInfoList" resultMap="BaseResultMap">
         SELECT
             plan_info.plan_id,
-            plan_info.crop_info_id,
+            plan_info.crop_no,
             plan_info.record_time,
             plan_info.temperature,
             plan_info.arowths,
@@ -121,11 +120,11 @@
             crop_name
         FROM
             plan_info
-                LEFT JOIN crop_info ON plan_info.crop_info_id = crop_info.id
+                LEFT JOIN crop_info ON plan_info.crop_no = crop_info.crop_no
         where
             plan_info.del_flag = 0
-        <if test="cropName!=null and cropName!=''">
-            AND instr(crop_name,#{cropName})
+        <if test="cropNo!=null and cropNo!=''">
+            AND plan_info.crop_no = #{cropNo}
         </if>
         <if test="params!=null">
             AND plan_info.record_time >=#{params.beginTime}
@@ -133,11 +132,12 @@
         <if test="params!=null">
             AND plan_info.record_time &lt;=#{params.endTime}
         </if>
+            order by plan_info.record_time desc
     </select>
     <select id="selectPlanInfoToExcel" resultMap="BaseResultMap">
         SELECT
             plan_id,
-            crop_info_id,
+            crop_no,
             record_time,
             temperature,
             arowths,
@@ -152,8 +152,8 @@
             plan_info
         where
         plan_info.del_flag = 0
-        <if test="cropName!=null and cropName!=''">
-            AND instr(crop_name,#{cropName})
+        <if test="cropNo!=null and cropNo!=''">
+            AND crop_no = #{cropNo}
         </if>
         <if test="params!=null">
             AND plan_info.record_time >=#{params.beginTime}

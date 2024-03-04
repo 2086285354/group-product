@@ -2,13 +2,10 @@
   <div>
     <el-form align="center" style="margin-top: 10px;" :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="作物名称" prop="cropName">
-        <el-input
-          v-model="queryParams.cropName"
-          placeholder="农作物名称"
-          clearable
-          style="width: 240px"
-          @keyup.enter.native="query"
-        />
+        <el-select v-model="queryParams.cropNo" placeholder="请选择农产品" clearable
+                   :style="{width: '100%'}">
+          <el-option v-for="t in cropInfoIdOptions" :label="t.cropName" :value="t.cropNo"></el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="记录时间">
         <el-date-picker
@@ -103,8 +100,10 @@
       <el-table-column
         v-if="columns[3].visible"
         align="center"
-        prop="temperature"
         label="温度">
+        <template v-slot="scope">
+          {{scope.row.temperature}}℃
+        </template>
       </el-table-column>
       <el-table-column
         v-if="columns[4].visible"
@@ -115,14 +114,18 @@
       <el-table-column
         v-if="columns[5].visible"
         align="center"
-        prop="humidness"
         label="湿度">
+        <template v-slot="scope">
+          {{scope.row.humidness}}RH
+        </template>
       </el-table-column>
       <el-table-column
         v-if="columns[6].visible"
         align="center"
-        prop="illumination"
         label="光照">
+        <template v-slot="scope">
+          {{scope.row.illumination}}Lux
+        </template>
       </el-table-column>
       <el-table-column
         v-if="columns[7].visible"
@@ -174,11 +177,18 @@
         <el-form ref="form" :model="form" :rules="rules" size="medium" label-width="100px"
                  label-position="top">
           <el-col :span="12">
-            <el-form-item label="农产品" prop="cropInfoId">
-              <el-select v-model="form.cropInfoId" placeholder="请选择农产品" clearable
-                         :style="{width: '100%'}">
-                <el-option v-for="t in cropInfoIdOptions" :label="t.cropName" :value="t.id"></el-option>
+            <el-form-item label="农产品" prop="cropNo">
+              <el-select v-model="form.cropNo" placeholder="请选择农产品" clearable :style="{width: '100%'}">
+                <el-option
+                  v-for="item in cropInfoIdOptions"
+                  :key="item.cropNo"
+                  :label="item.cropName"
+                  :value="item.cropNo">
+                </el-option>
               </el-select>
+<!--              <el-select v-model="form.cropNo" placeholder="请选择农产品" clearable :style="{width: '100%'}">-->
+<!--                <el-option v-for="t in cropInfoIdOptions" :label="t.cropName" :value="t.cropNo"></el-option>-->
+<!--              </el-select>-->
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -222,7 +232,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="备注信息" prop="remark">
+            <el-form-item label="备注信息">
               <el-input v-model="form.remark" type="textarea" placeholder="请输入备注信息"
                         :autosize="{minRows: 4, maxRows: 4}" :style="{width: '100%'}"></el-input>
             </el-form-item>
@@ -274,7 +284,6 @@ import {
   getPlanInfo,
   updatePlanCropInfo
 } from "@/api/system/trak";
-import {getUserProfile} from "@/api/system/user";
 import {getToken} from "@/utils/auth";
 
 export default {
@@ -330,11 +339,9 @@ export default {
       title:"",
       //校验规则
       rules:{
-        cropInfoId: [{
-          required: true,
-          message: '请选择农产品',
-          trigger: 'change'
-        }],
+        cropNo: [
+          {required: true, message: '请选择农产品', trigger: 'change'}
+        ],
         temperature: [{
           required: true,
           message: '请输入温度',
@@ -354,12 +361,7 @@ export default {
           required: true,
           message: '请输入光照',
           trigger: 'blur'
-        }],
-        remark: [{
-          required: true,
-          message: '请输入备注信息',
-          trigger: 'blur'
-        }],
+        }]
       },
       //农作物信息
       cropInfoIdOptions:[],
@@ -419,9 +421,7 @@ export default {
     //打开添加对话框
     handAdd(){
       this.reflush();
-      getUserProfile().then(r=>{
-        this.form.createBy=r.data.userName
-      })
+      this.form={}
       this.open = true;
       this.title = "添加";
     },
@@ -429,9 +429,6 @@ export default {
     handleUpdate(obj){
       this.reflush();
       this.form=obj;
-      getUserProfile().then(r=>{
-        this.form.updateBy=r.data.userName
-      })
       this.getTitle();
     },
     openUpdate(){
@@ -488,7 +485,7 @@ export default {
     reflush(){
       this.form={
         planId:undefined,
-        cropInfoId:undefined,
+        cropNo:undefined,
         recordTime:undefined,
         temperature:undefined,
         arowths:undefined,
@@ -499,6 +496,7 @@ export default {
         createBy:"",
         updateBy:""
       }
+      this.resetForm("form");
     },
     //每页显示条数改变时
     handleSizeChange(val) {
@@ -531,6 +529,7 @@ export default {
       getPlanInfo(this.addDateRange(this.queryParams, this.dateRange)).then(r=>{
         if (r.code == 200){
           this.planInfoData = r.data.list;
+          console.log(this.planInfoData)
           this.total = r.data.total;
         }
       })
@@ -541,11 +540,11 @@ export default {
       this.queryParams = {pageNum: 1, pageSize: 10, cropName: undefined,}
       this.query();
     },
+    //获取作物信息
     getCropInfo(){
       getCropInfo().then(r=>{
         if (r.code==200){
           this.cropInfoIdOptions = r.data
-          console.log(this.cropInfoIdOptions)
         }
       })
     },

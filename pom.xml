@@ -219,6 +219,7 @@
         <module>ruoyi-modules/ruoyi-product</module>
         <module>ruoyi-modules/ruoyi-trak</module>
         <module>ruoyi-modules/ruoyi-area</module>
+        <module>ruoyi-modules/ruoyi-activity</module>
     </modules>
     <packaging>pom</packaging>
 

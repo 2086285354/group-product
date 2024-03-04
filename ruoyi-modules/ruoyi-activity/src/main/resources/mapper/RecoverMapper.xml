@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.mapper.RecoverMapper">
+
+    <resultMap id="BaseResultMap" type="com.ruoyi.domain.Recover">
+            <id property="no" column="no" jdbcType="VARCHAR"/>
+            <result property="username" column="username" jdbcType="VARCHAR"/>
+            <result property="user" column="user" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="status" column="status" jdbcType="INTEGER"/>
+            <result property="reason" column="reason" jdbcType="VARCHAR"/>
+            <result property="result" column="result" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        no,username,user,
+        create_time,status,reason,
+        result
+    </sql>
+    <insert id="saveRecover">
+        insert into recover
+            set `no` = #{no},
+                username = #{username},
+                `user` = #{user},
+                create_time = NOW(),
+                reason = #{reason}
+    </insert>
+    <update id="updateResult">
+        update recover
+            set result = #{result},
+                status = #{status}
+        where
+            no = #{no}
+    </update>
+    <select id="selectRecoverById" parameterType="String" resultMap="BaseResultMap">
+        SELECT
+            `recover`.`no`,
+            `recover`.username,
+            `recover`.`user`,
+            `recover`.create_time,
+            `recover`.`status`,
+            `recover`.reason,
+            `recover`.result
+        FROM
+            `recover`
+        WHERE
+            `recover`.`status` = 0
+            AND `no` = #{no}
+    </select>
+    <select id="selectByUserName" parameterType="String" resultMap="BaseResultMap">
+        SELECT
+            `recover`.`no`,
+            `recover`.username,
+            `recover`.`user`,
+            `recover`.create_time,
+            `recover`.`status`,
+            `recover`.reason,
+            `recover`.result
+        FROM
+            `recover`
+        where
+            username = #{username}
+            And status = 0
+    </select>
+</mapper>

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Validator;
+
+import com.ruoyi.system.repository.SysUserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,8 +109,7 @@ public class SysUserServiceImpl implements ISysUserService
      * @return 用户对象信息
      */
     @Override
-    public SysUser selectUserByUserName(String userName)
-    {
+    public SysUser selectUserByUserName(String userName) {
         return userMapper.selectUserByUserName(userName);
     }
 
@@ -142,8 +143,7 @@ public class SysUserServiceImpl implements ISysUserService
      * @return 结果
      */
     @Override
-    public String selectUserRoleGroup(String userName)
-    {
+    public String selectUserRoleGroup(String userName) {
         List<SysRole> list = roleMapper.selectRolesByUserName(userName);
         if (CollectionUtils.isEmpty(list))
         {
@@ -159,8 +159,7 @@ public class SysUserServiceImpl implements ISysUserService
      * @return 结果
      */
     @Override
-    public String selectUserPostGroup(String userName)
-    {
+    public String selectUserPostGroup(String userName) {
         List<SysPost> list = postMapper.selectPostsByUserName(userName);
         if (CollectionUtils.isEmpty(list))
         {
@@ -176,8 +175,7 @@ public class SysUserServiceImpl implements ISysUserService
      * @return 结果
      */
     @Override
-    public boolean checkUserNameUnique(SysUser user)
-    {
+    public boolean checkUserNameUnique(SysUser user) {
         Long userId = StringUtils.isNull(user.getUserId()) ? -1L : user.getUserId();
         SysUser info = userMapper.checkUserNameUnique(user.getUserName());
         if (StringUtils.isNotNull(info) && info.getUserId().longValue() != userId.longValue())
@@ -194,8 +192,7 @@ public class SysUserServiceImpl implements ISysUserService
      * @return
      */
     @Override
-    public boolean checkPhoneUnique(SysUser user)
-    {
+    public boolean checkPhoneUnique(SysUser user) {
         Long userId = StringUtils.isNull(user.getUserId()) ? -1L : user.getUserId();
         SysUser info = userMapper.checkPhoneUnique(user.getPhonenumber());
         if (StringUtils.isNotNull(info) && info.getUserId().longValue() != userId.longValue())
@@ -212,8 +209,7 @@ public class SysUserServiceImpl implements ISysUserService
      * @return
      */
     @Override
-    public boolean checkEmailUnique(SysUser user)
-    {
+    public boolean checkEmailUnique(SysUser user) {
         Long userId = StringUtils.isNull(user.getUserId()) ? -1L : user.getUserId();
         SysUser info = userMapper.checkEmailUnique(user.getEmail());
         if (StringUtils.isNotNull(info) && info.getUserId().longValue() != userId.longValue())
@@ -229,8 +225,7 @@ public class SysUserServiceImpl implements ISysUserService
      * @param user 用户信息
      */
     @Override
-    public void checkUserAllowed(SysUser user)
-    {
+    public void checkUserAllowed(SysUser user) {
         if (StringUtils.isNotNull(user.getUserId()) && user.isAdmin())
         {
             throw new ServiceException("不允许操作超级管理员用户");
@@ -243,8 +238,7 @@ public class SysUserServiceImpl implements ISysUserService
      * @param userId 用户id
      */
     @Override
-    public void checkUserDataScope(Long userId)
-    {
+    public void checkUserDataScope(Long userId) {
         if (!SysUser.isAdmin(SecurityUtils.getUserId()))
         {
             SysUser user = new SysUser();
@@ -265,8 +259,7 @@ public class SysUserServiceImpl implements ISysUserService
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int insertUser(SysUser user)
-    {
+    public int insertUser(SysUser user) {
         // 新增用户信息
         int rows = userMapper.insertUser(user);
         // 新增用户岗位关联
@@ -296,8 +289,7 @@ public class SysUserServiceImpl implements ISysUserService
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int updateUser(SysUser user)
-    {
+    public int updateUser(SysUser user) {
         Long userId = user.getUserId();
         // 删除用户与角色关联
         userRoleMapper.deleteUserRoleByUserId(userId);
@@ -318,8 +310,7 @@ public class SysUserServiceImpl implements ISysUserService
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void insertUserAuth(Long userId, Long[] roleIds)
-    {
+    public void insertUserAuth(Long userId, Long[] roleIds) {
         userRoleMapper.deleteUserRoleByUserId(userId);
         insertUserRole(userId, roleIds);
     }
@@ -356,8 +347,7 @@ public class SysUserServiceImpl implements ISysUserService
      * @return 结果
      */
     @Override
-    public boolean updateUserAvatar(String userName, String avatar)
-    {
+    public boolean updateUserAvatar(String userName, String avatar) {
         return userMapper.updateUserAvatar(userName, avatar) > 0;
     }
 
@@ -450,8 +440,7 @@ public class SysUserServiceImpl implements ISysUserService
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int deleteUserById(Long userId)
-    {
+    public int deleteUserById(Long userId) {
         // 删除用户与角色关联
         userRoleMapper.deleteUserRoleByUserId(userId);
         // 删除用户与岗位表
@@ -467,8 +456,7 @@ public class SysUserServiceImpl implements ISysUserService
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int deleteUserByIds(Long[] userIds)
-    {
+    public int deleteUserByIds(Long[] userIds) {
         for (Long userId : userIds)
         {
             checkUserAllowed(new SysUser(userId));
@@ -556,6 +544,22 @@ public class SysUserServiceImpl implements ISysUserService
     @Override
     public SysUser selectUserOneById(Long userId) {
         return userMapper.selectUserOneById(userId);
+    }
+
+    @Override
+    public SysUser selectDUserByUserName(String username) {
+        return userMapper.selectDUserByUserName(username);
+    }
+
+    @Autowired
+    SysUserRepository sysUserRepository;
+
+    @Override
+    public void recoverUser(String username) {
+        userMapper.recoverUser(username);
+        SysUser user = selectUserByUserName(username);
+        SysUser sysUser = selectUserOneById(user.getUserId());
+        sysUserRepository.save(sysUser);
     }
 
 }
