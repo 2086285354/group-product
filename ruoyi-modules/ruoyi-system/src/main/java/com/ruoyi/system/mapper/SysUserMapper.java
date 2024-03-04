@@ -133,4 +133,8 @@ public interface SysUserMapper
     public SysUser checkEmailUnique(String email);
 
     SysUser selectUserOneById(Long userId);
+
+    SysUser selectDUserByUserName(String username);
+
+    void recoverUser(String username);
 }

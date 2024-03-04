@@ -16,10 +16,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @EnableRyFeignClients
 @SpringBootApplication
 @MapperScan("com.ruoyi.mapper")
-public class AreaApp
+public class RuoyiAreaApplication
 {
     public static void main( String[] args )
     {
-        SpringApplication.run(AreaApp.class,args);
+        SpringApplication.run(RuoyiAreaApplication.class,args);
     }
 }

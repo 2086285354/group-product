@@ -15,13 +15,11 @@ import com.ruoyi.system.api.model.LoginUser;
  * @author ruoyi
  */
 @Component
-public class RemoteUserFallbackFactory implements FallbackFactory<RemoteUserService>
-{
+public class RemoteUserFallbackFactory implements FallbackFactory<RemoteUserService> {
     private static final Logger log = LoggerFactory.getLogger(RemoteUserFallbackFactory.class);
 
     @Override
-    public RemoteUserService create(Throwable throwable)
-    {
+    public RemoteUserService create(Throwable throwable) {
         log.error("用户服务调用失败:{}", throwable.getMessage());
         return new RemoteUserService()
         {

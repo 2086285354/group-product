@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.mapper.RecoverHisMapper">
+
+    <resultMap id="BaseResultMap" type="com.ruoyi.domain.RecoverHis">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="recoverNo" column="recover_no" jdbcType="VARCHAR"/>
+
+            <result property="username" column="username" jdbcType="VARCHAR"/>
+            <result property="user" column="user" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="reason" column="reason" jdbcType="TIMESTAMP"/>
+            <result property="status" column="status" jdbcType="INTEGER"/>
+            <result property="result" column="result" jdbcType="INTEGER"/>
+
+            <result property="completeTime" column="complete_time" jdbcType="TIMESTAMP"/>
+            <result property="completeBy" column="complete_by" jdbcType="VARCHAR"/>
+
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,recover_no,complete_time,
+        complete_by
+    </sql>
+    <select id="selectRecoverHistorys" resultMap="BaseResultMap">
+        SELECT
+            recover_his.id,
+            recover_his.recover_no,
+            `recover`.username,
+            `recover`.`user`,
+            `recover`.create_time,
+            `recover`.reason,
+            `recover`.`status`,
+            `recover`.result,
+            recover_his.complete_time
+        FROM
+            `recover`
+                LEFT JOIN recover_his ON `recover`.`no` = recover_his.recover_no
+        WHERE
+            `recover`.`user` = #{user}
+          AND complete_by = 'admin'
+          AND STATUS != 0
+    </select>
+</mapper>

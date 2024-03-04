@@ -9,7 +9,7 @@ import java.util.Map;
 public class QueryParams {
     private Integer pageNum = 1;
     private Integer pageSize = 10;
-    private String cropName;
+    private String cropNo;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, Object> params;
 }

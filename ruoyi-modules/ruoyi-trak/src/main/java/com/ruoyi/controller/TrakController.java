@@ -30,13 +30,22 @@ public class TrakController {
     @Autowired
     HttpServletResponse response;
 
+    /**
+     * 查询种植记录
+     * @param params
+     * @return
+     */
     @GetMapping("getPlanInfoList")
     public R getPlanInfoList(QueryParams params){
-        System.err.println(params.getParams());
         PageInfo<PlanInfo> info =  planInfoService.selectPlanInfoList(params);
         return R.success(info);
     }
 
+    /**
+     * 上传作物图片
+     * @param file
+     * @return
+     */
     @RequestMapping("upload")
     @CrossOrigin
     public R upload(MultipartFile file){
@@ -44,38 +53,70 @@ public class TrakController {
         return R.success(imgUrl);
     }
 
+    /**
+     * 查询农作物信息
+     * @return
+     */
     @GetMapping("getCropInfoList")
     public R getCropInfoList(){
         List<CropInfo> list = cropInfoService.selectCropInfoList();
         return R.success(list);
     }
 
+    /**
+     * 添加种植记录
+     * @param info
+     * @return
+     */
     @PostMapping("addPlanCropInfo")
     public R addPlanCropInfo(@RequestBody PlanInfo info){
         planInfoService.addPlanInfo(info);
         return R.success();
     }
 
+    /**
+     * 修改种植记录
+     * @param info
+     * @return
+     */
     @PutMapping("updatePlanCropInfo")
     public R updatePlanCropInfo(@RequestBody PlanInfo info){
         planInfoService.updatePlanCropInfo(info);
         return R.success();
     }
 
+    /**
+     * 删除种植记录
+     * @param ids
+     * @return
+     */
     @DeleteMapping("deletePlanCropInfo")
     public R deletePlanCropInfo(String ids){
         planInfoService.deletePlanCropInfoByIds(ids);
         return R.success();
     }
 
+    /**
+     * 导出种植记录
+     * @param params
+     * @throws IOException
+     * @throws URISyntaxException
+     * @throws InterruptedException
+     */
     @GetMapping("excelDownload")
     public void excelDownload(QueryParams params) throws IOException, URISyntaxException, InterruptedException {
         planInfoService.excelDownload(response,params);
     }
 
+    /**
+     * 导入数据
+     * @param file
+     * @return
+     */
     @PostMapping("importPlanCropInfoData")
     public R importPlanCropInfoData(MultipartFile file){
         boolean b = planInfoService.importPlanCropInfoData(file);
         return R.success(b);
     }
+
 }

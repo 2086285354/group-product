@@ -81,7 +81,7 @@ public class SysUserController extends BaseController
     SysUserRepository sysUserRepository;
 
     /**
-     * 获取用户列表
+     * 初始化数据到es中
      */
     @PostConstruct
     public void init() {
@@ -227,12 +227,43 @@ public class SysUserController extends BaseController
     }
 
     /**
+     * 获取已删除的用户信息
+     * @param username
+     * @return
+     */
+    @PostMapping("/getUserByUsername")
+    public R<LoginUser> getUserByUsername(@RequestParam("username") String username){
+        SysUser sysUser = userService.selectDUserByUserName(username);
+        if (StringUtils.isNull(sysUser))
+        {
+            return R.fail("用户未被删除或用户名错误");
+        }
+        // 角色集合
+        Set<String> roles = permissionService.getRolePermission(sysUser);
+        // 权限集合
+        Set<String> permissions = permissionService.getMenuPermission(sysUser);
+        LoginUser sysUserVo = new LoginUser();
+        sysUserVo.setSysUser(sysUser);
+        sysUserVo.setRoles(roles);
+        sysUserVo.setPermissions(permissions);
+        return R.ok(sysUserVo);
+    }
+
+    /**
+     * 恢复用户账号
+     */
+    @PostMapping("recoverUser")
+    public AjaxResult recoverUser(@RequestParam("username")String username){
+        userService.recoverUser(username);
+        return AjaxResult.success();
+    }
+
+    /**
      * 获取当前用户信息
      */
     @InnerAuth
     @GetMapping("/info/{username}")
-    public R<LoginUser> info(@PathVariable("username") String username)
-    {
+    public R<LoginUser> info(@PathVariable("username") String username) {
         SysUser sysUser = userService.selectUserByUserName(username);
         if (StringUtils.isNull(sysUser))
         {

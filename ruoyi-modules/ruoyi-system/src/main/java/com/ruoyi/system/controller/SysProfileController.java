@@ -45,6 +45,15 @@ public class SysProfileController extends BaseController
     private RemoteFileService remoteFileService;
 
     /**
+     * 获取当前登录用户名
+     */
+    @GetMapping("getLoginUsername")
+    public AjaxResult getLoginUsername(){
+        String username = SecurityUtils.getUsername();
+        return AjaxResult.success(username);
+    }
+
+    /**
      * 个人信息
      */
     @GetMapping
@@ -63,8 +72,7 @@ public class SysProfileController extends BaseController
      */
     @Log(title = "个人信息", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult updateProfile(@RequestBody SysUser user)
-    {
+    public AjaxResult updateProfile(@RequestBody SysUser user) {
         LoginUser loginUser = SecurityUtils.getLoginUser();
         SysUser currentUser = loginUser.getSysUser();
         currentUser.setNickName(user.getNickName());
@@ -93,8 +101,7 @@ public class SysProfileController extends BaseController
      */
     @Log(title = "个人信息", businessType = BusinessType.UPDATE)
     @PutMapping("/updatePwd")
-    public AjaxResult updatePwd(String oldPassword, String newPassword)
-    {
+    public AjaxResult updatePwd(String oldPassword, String newPassword) {
         String username = SecurityUtils.getUsername();
         SysUser user = userService.selectUserByUserName(username);
         String password = user.getPassword();
@@ -123,8 +130,7 @@ public class SysProfileController extends BaseController
      */
     @Log(title = "用户头像", businessType = BusinessType.UPDATE)
     @PostMapping("/avatar")
-    public AjaxResult avatar(@RequestParam("avatarfile") MultipartFile file)
-    {
+    public AjaxResult avatar(@RequestParam("avatarfile") MultipartFile file) {
         if (!file.isEmpty())
         {
             LoginUser loginUser = SecurityUtils.getLoginUser();

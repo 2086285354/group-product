@@ -14,15 +14,11 @@ import lombok.Data;
  */
 @Data
 public class CropInfo implements Serializable {
-    /**
-     * 
-     */
-    private Integer id;
 
     /**
      * 编号  
      */
-    private Long cropNum;
+    private String cropNo;
 
     /**
      * 种植基地id

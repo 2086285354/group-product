@@ -1,5 +1,13 @@
 import request from '@/utils/request'
 import { parseStrEmpty } from "@/utils/ruoyi";
+//恢复申请
+export function addRecover(obj){
+  return request({
+    url:"/reco/recover/addRecover",
+    method:"post",
+    data:obj
+  })
+}
 
 // 查询用户列表
 export function listUser(query) {

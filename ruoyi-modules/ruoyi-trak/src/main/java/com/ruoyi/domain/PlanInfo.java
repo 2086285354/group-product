@@ -24,16 +24,16 @@ import lombok.Data;
 @ColumnWidth(value = 20)
 public class PlanInfo implements Serializable {
     /**
-     * 农作物记录ID
+     * 农作物记录编号
      */
-    @ExcelProperty(value = "农作物记录ID")
+    @ExcelProperty(value = "农作物记录编号")
     private Integer planId;
 
     /**
-     * 农作物信息ID
+     * 农作物信息编号
      */
-    @ExcelProperty(value = "农作物信息ID")
-    private Integer cropInfoId;
+    @ExcelProperty(value = "农作物信息编号")
+    private String cropNo;
 
     /**
      * 记录时间

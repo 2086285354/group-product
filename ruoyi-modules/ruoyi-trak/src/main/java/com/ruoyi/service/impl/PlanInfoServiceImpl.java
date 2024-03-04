@@ -15,12 +15,15 @@ import com.ruoyi.common.EasyExcelConfig;
 import com.ruoyi.common.MinioConfig;
 import com.ruoyi.common.QueryParams;
 import com.ruoyi.common.core.exception.ServiceException;
+import com.ruoyi.common.core.web.domain.AjaxResult;
 import com.ruoyi.domain.PlanInfo;
 import com.ruoyi.emum.MinioUploadEnum;
 import com.ruoyi.service.PlanInfoService;
 import com.ruoyi.mapper.PlanInfoMapper;
+import com.ruoyi.service.RemoteUserProfileService;
 import com.ruoyi.util.ExcelDictDTOListener;
 import com.ruoyi.util.ExcelFillCellMergeStrategy;
+import com.ruoyi.util.ExcelUtil;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.*;
@@ -48,6 +51,8 @@ import java.util.UUID;
 @Slf4j
 public class PlanInfoServiceImpl extends ServiceImpl<PlanInfoMapper, PlanInfo>
     implements PlanInfoService{
+    @Autowired
+    RemoteUserProfileService remoteUserProfileService;
     @Autowired
     MinioConfig minioConfig;
 
@@ -100,7 +105,7 @@ public class PlanInfoServiceImpl extends ServiceImpl<PlanInfoMapper, PlanInfo>
     @Override
     @Transactional
     public void addPlanInfo(PlanInfo info) {
-        if (info.getCropInfoId() == null) {
+        if (info.getCropNo() == null) {
             throw new ServiceException("请选择农作物");
         }
         if (info.getTemperature() == null || info.getTemperature() == ""){
@@ -118,15 +123,14 @@ public class PlanInfoServiceImpl extends ServiceImpl<PlanInfoMapper, PlanInfo>
         if (info.getPic() == null || info.getPic()==""){
             throw new ServiceException("请选择作物照片");
         }
-        if (info.getCreateBy() == null || info.getCreateBy()==""){
-            throw new ServiceException("请登陆后重试");
-        }
+        AjaxResult login = remoteUserProfileService.getLoginUsername();
+        info.setCreateBy(login.get("msg")+"");
         baseMapper.addPlanInfo(info);
     }
 
     @Override
     public void updatePlanCropInfo(PlanInfo info) {
-        if (info.getCropInfoId() == null) {
+        if (info.getCropNo() == null) {
             throw new ServiceException("农作物不能为空");
         }
         if (info.getTemperature() == null || info.getTemperature() == ""){
@@ -144,9 +148,8 @@ public class PlanInfoServiceImpl extends ServiceImpl<PlanInfoMapper, PlanInfo>
         if (info.getPic() == null || info.getPic()==""){
             throw new ServiceException("作物照片不能为空");
         }
-        if (info.getUpdateBy() == null || info.getUpdateBy()==""){
-            throw new ServiceException("请登陆后重试");
-        }
+        AjaxResult login = remoteUserProfileService.getLoginUsername();
+        info.setUpdateBy(login.get("msg")+"");
         baseMapper.updatePlanCropInfo(info);
     }
 
@@ -164,6 +167,8 @@ public class PlanInfoServiceImpl extends ServiceImpl<PlanInfoMapper, PlanInfo>
         response.setCharacterEncoding(EasyExcelConfig.CHARSET);//设置编码
         //test.xls是弹出下载对话框的文件名，不能为中文，中文请自行编码
         response.setHeader("Content-Disposition","attachment;filename=plant_"+new Snowflake().nextIdStr() +".xls");
+
+        ExcelUtil.excelDownload(response,new ArrayList<>(),"ss");
 
         List<PlanInfo> list = baseMapper.selectPlanInfoToExcel(params);
 

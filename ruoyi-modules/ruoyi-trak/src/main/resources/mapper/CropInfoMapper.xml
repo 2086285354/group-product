@@ -5,8 +5,7 @@
 <mapper namespace="com.ruoyi.mapper.CropInfoMapper">
 
     <resultMap id="BaseResultMap" type="com.ruoyi.domain.CropInfo">
-            <id property="id" column="id" jdbcType="INTEGER"/>
-            <result property="cropNum" column="crop_num" jdbcType="BIGINT"/>
+            <result property="cropNo" column="crop_no" jdbcType="VARCHAR"/>
             <result property="baseId" column="base_id" jdbcType="INTEGER"/>
             <result property="cropName" column="crop_name" jdbcType="VARCHAR"/>
             <result property="registrationTime" column="registration_time" jdbcType="TIMESTAMP"/>
@@ -27,7 +26,7 @@
     </sql>
     <select id="selectCropInfoList" resultMap="BaseResultMap">
         SELECT
-            crop_info.id,
+            crop_info.crop_no,
             crop_info.crop_name
         FROM
             crop_info
